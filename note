@@ -1,0 +1,97 @@
+功能点:
+	1.分页
+	2.数据校验
+		jQuery前端校验+JSR303后端校验
+	3.ajax
+	4.REST风格的URI:使用HTTP协议请求方式的动词来表示对资源的操作(GET/POST/PUT/DELETE)
+
+基础框架:SSM
+数据库:MySQL
+前端框架:bootstrape
+项目的依赖管理:Maven
+分页:pagehelper插件
+逆向工程:MyBatis Generator
+
+基础环境搭建
+	1.创建一个Maven工程：new--Maven Project
+	2.引入项目依赖的jar包
+		spring
+		springmvc
+		mybatis
+		数据库连接池/驱动包
+		其他（jstl/servlet-api/junit）
+	3.引入前端框架：bootstrape
+	4.编写ssm整合的关键配置文件
+		web.xml,spring,springmvc,mybatis
+		Spring配置文件的核心点：数据源/与mybatis的整合/事务控制
+	5.创建数据库，新建表
+	6.使用mybatis的逆向工程生产对应的bean及mapper
+	7.测试dao层能否正常工作(使用Spring的单元测试，导入spring的单元测试模块)
+
+	
+功能实现：
+	1.查詢：访问index.jsp页面---> 发出员工查詢请求(URI:/emps)---> EmployeeController接受请求，查出员工数据--->来到list.jsp页面进行展示	
+		实现分页：引入PageHelper插件-->pom.xml中配置依赖-->mybatis-config.xml中注册-->使用PageInfo传输数据-->页码通过pageInfo获取数据
+		页面展示：使用bootstrap样式
+	2.改善查詢：使用ajax，返回JSON数据
+			index.jsp页面直接发送Ajax请求进行员工分页数据的查詢
+			服务器将查询到的数据以JSON字符串的形式返回给浏览器
+			浏览器收到字符串后，使用js对JSON进行解析，使用js通过DOM增删改的形式来改变页面
+		关键点：
+			pom.xml中添加 jackson 包
+			处理器方法上加 @ResponseBody 注解以返回Json形式的数据
+			jsp中使用Jquery对接收到的数据进行处理
+	3.新增：在index.jsp页面点击新增按钮--->弹出新增对话框--->去数据库查詢部门列表，显示在对话框中--->用户输入数据--->完成保存
+		关键点：
+			对话框使用JavaScript的模态框插件
+			新增的uri为：/emp  method=POST (REST风格)
+			保存成功后，主要关闭模态框并显示到最后一页员工信息
+	4.改善新增：对输入的数据进行校验
+		前端校验：jQuery
+			用户输入数据--校验--校验成功--提交给服务器保存
+			校验提示：使用bootstrap的校验状态显示
+		服务端校验：ajax
+			校验用户名是否重复
+		其他：每次弹出模态框时不保存原来的校验信息（状态）
+		缺点：如果用户绕过前端校验（通过浏览器自带的开发工具），仍会错误保存
+	5.改善校验:后端校验，基于JSR303，唯一约束
+		关键点：
+			pom.xml中导入JSR303校验的支持包：Hibernate-Validator（Tomcat7及以上的服务器，直接导入包即可）
+			给bean中需要校验的属性加上对应的注解
+			在保存员工封装员工信息处标注 @Valid 注解（控制器方法参数处）
+	6.修改:点击编辑按钮--弹出用户修改的模态框--模态框中显示用户信息--点击更新,完成修改
+		关键点:
+			弹出模态框之前要查询到该员工的信息以及所有的部门信息用于在模态框中显示
+			更新前要先验证邮箱的合法性
+			发送的请求应该是 PUT请求,uri为 /emp
+	7.单个删除:点击删除按钮--弹出确认框--点击确认--发送ajax请求 /emp/id  DELETE--处理删除的请求--提示删除成功--回到原来的页面	
+	8.批量删除:
+		jsp页面实现多选框,以及全选/全部选按钮
+		选择多个--点击删除按钮--确认删除对话框--ajax请求 /emp/id1-id2-id3-.. DELETE --处理请求--提示删除成功--回到原来的页面
+		注意发送请求时的参数
+		
+		
+		
+		
+路径问题：
+	不以/开始的是相对路径，是以当前资源的路径为基准
+	以/开始的为绝对路径，是以服务器的路径为基准
+	<% pageContext.setAttribute("APP_PATH",request.getContextPath()); %> 获取项目的根路径，在使用时用  ${APP_PATH}/资源路径  即可
+	
+	
+ajax不可以直接发送PUT请求,如果直接发送PUT请求则Tomcat无法拿到数据,也就无法封装数据
+但是可以在web.xml中配置org.springframework.web.filter.HttpPutFormContentFilter过滤器,此时可以直接发送PUT请求
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
